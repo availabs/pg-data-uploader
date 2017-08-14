@@ -1,0 +1,63 @@
+mkdir -p 'HERE/shp/'
+mkdir -p 'HERE/lut/'
+
+for f in HERE/*Shapefile*
+do
+  mv  "$f" HERE/shp/
+done
+
+for f in HERE/*LUT*
+do
+  mv  "$f" HERE/lut/
+done
+
+DST="PG:host=localhost port=5434 user=npmrds_explorer dbname=npmrds_sandbox password=sandbox"
+FORMAT='PostgreSQL'
+
+DST='HERE_SHP.sql'
+FORMAT='PGDump'
+
+SRC='HERE/shp/'
+SCHEMA=ny
+TABLE=here_shapefile
+
+ogr2ogr \
+  -f "$FORMAT" \
+  "${DST}" \
+  "${SRC}" \
+  -nlt MULTILINESTRING \
+  -lco SCHEMA="${SCHEMA}" \
+  -nln "${TABLE}"
+
+
+SRC='HERE/lut/'
+SCHEMA=ny
+TABLE=here_lut
+
+# ogr2ogr \
+  # -f "$FORMAT" \
+  # "${DST}" \
+  # "${SRC}" \
+  # -nlt MULTILINESTRING \
+  # -lco SCHEMA="${SCHEMA}" \
+  # -nln "${TABLE}"
+
+export DB_NAME='npmrds_sandbox'
+export DB_HOST='127.0.0.1'
+export DB_PORT='5434'
+export DB_SCHEMA='ny'
+export DB_USER='npmrds_explorer'
+
+export PGPASSWORD='sandbox'
+
+psql -h '127.0.0.1' -p '5434' -U npmrds_explorer -d npmrds_sandbox -c 'DROP TABLE "ny".here_static'
+
+./bin/pgfutter \
+  --dbname npmrds_sandbox \
+  --table here_static \
+  --host '127.0.0.1' \
+  --port 5434 \
+  --schema ny \
+  --username npmrds_explorer \
+  --pass sandbox \
+  csv './HERE/static/FHWA_Monthly_Static_File_2016Q2.csv'
