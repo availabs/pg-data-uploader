@@ -24,6 +24,11 @@
 * [TIGER]()
 
   * [county](http://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_counties_national.zip)
+  * [cbsa\_combined](https://www2.census.gov/geo/tiger/TIGER2016/CSA/tl_2016_us_csa.zip)
+  * [cbsa\_metro](https://www2.census.gov/geo/tiger/TIGER2016/METDIV/tl_2016_us_metdiv.zip)
+  * [cbsa\_metro\_micro](https://www2.census.gov/geo/tiger/TIGER2016/CBSA/tl_2016_us_cbsa.zip)
+  * [cbsa\_new\_england](https://www2.census.gov/geo/tiger/TIGER2016/NECTA/tl_2016_us_necta.zip)
+  * [cbsa\_new\_england\_div](https://www2.census.gov/geo/tiger/TIGER2016/NECTADIV/tl_2016_us_nectadiv.zip)
   * [tract](http://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_tracts_national.zip)
   * [county subdivision](http://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_cousubs_national.zip)
   * [place](http://www2.census.gov/geo/docs/maps-data/data/gazetteer/Gaz_places_national.zip)
@@ -45,10 +50,10 @@
 
 * [FHWA GIS](https://hepgis.fhwa.dot.gov/fhwagis/#)
 
-  * [Download form](https://hepgis.fhwa.dot.gov/fhwagis/DownloadForm.html)
+  * [download form](https://hepgis.fhwa.dot.gov/fhwagis/DownloadForm.html) for
 
     * MPOBoundary
-    * AltFuleCorridors
+    * AltFuelCorridors
 
 ## NYSMPOS
 

@@ -64,9 +64,16 @@ const gazetteersDir = join(__dirname, '../data/Census/gazetteers/')
 
 const pgfutterPath = join(__dirname, '../lib/pgfutter')
 
+
+
 const geographyTypes = [
   'block_group',
   'block',
+  'cbsa_combined',
+  'cbsa_metro',
+  'cbsa_metro_micro',
+  'cbsa_new_england',
+  'cbsa_new_england_div',
   'county',
   'county_subdivision',
   'place',
@@ -205,7 +212,16 @@ async function loadGazetteer (params) {
   const dataFileName = dataFileNames[0]
   const dataFilePath = join(dataDir, dataFileName)
 
-  await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS "${schema}";'`, { env: pgEnv })
+  try {
+    await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS "${schema}";'`, { env: pgEnv })
+  } catch (err) {
+    // Race-condition error: IF NOT EXISTS is not thread-safe
+    if (err.message.match(/ERROR:  duplicate key value violates unique constraint/)) {
+      throw err
+    }
+  }
+
+
   await execAsync(`psql -c 'DROP TABLE IF EXISTS "${schema}".${tableName};'`, { env: pgEnv })
 
   const cmd = `
