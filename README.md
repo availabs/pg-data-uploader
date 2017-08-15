@@ -59,4 +59,97 @@ The shapes were taken from the FHWA Shapefiles.
 
   * Used to get the abbreviations
 
+## `data/` directory structure
+
+### The `bin/load-*` scripts assume the following directory structure
+
+```
+data
+├── Census
+│   ├── gazetteers
+│   │   ├── county
+│   │   │   └── 2010
+│   │   │       └── US
+│   │   │           └── Gaz_counties_national.zip
+│   │   ├── county_subdivision
+│   │   │   └── 2010
+│   │   │       └── US
+│   │   │           └── Gaz_cousubs_national.zip
+│   │   ├── place
+│   │   │   └── 2016
+│   │   │       └── US
+│   │   │           └── Gaz_places_national.zip
+│   │   ├── puma
+│   │   │   └── 2010
+│   │   │       └── US
+│   │   │           └── 2010_Gaz_PUMAs_national.zip
+│   │   ├── tract
+│   │   │   └── 2010
+│   │   │       └── US
+│   │   │           └── Gaz_tracts_national.zip
+│   │   ├── urban_area
+│   │   │   └── 2010
+│   │   │       └── US
+│   │   │           └── Gaz_ua.zip
+│   │   └── zip
+│   │       └── 2010
+│   │           └── US
+│   │               └── Gaz_zcta_national.zip
+│   └── shapefiles
+│       ├── block
+│       │   └── 2016
+│       │       └── NY
+│       │           └── tl_2016_36_tabblock10.zip
+│       ├── block_group
+│       │   └── 2016
+│       │       └── NY
+│       │           └── tl_2016_36_bg.zip
+│       ├── county
+│       │   └── 2016
+│       │       └── US
+│       │           └── tl_2016_us_county.zip
+│       ├── county_subdivision
+│       │   └── 2016
+│       │       └── NY
+│       │           └── tl_2016_36_cousub.zip
+│       ├── place
+│       │   └── 2016
+│       │       └── NY
+│       │           └── tl_2016_36_place.zip
+│       ├── puma
+│       │   └── 2010
+│       │       └── NY
+│       │           └── tl_2016_36_puma10.zip
+│       ├── state
+│       │   └── 2016
+│       │       └── US
+│       │           └── tl_2016_us_state.zip
+│       ├── tract
+│       │   └── 2016
+│       │       └── NY
+│       │           └── tl_2016_36_tract.zip
+│       ├── urban_area
+│       │   └── 2016
+│       │       └── US
+│       │           └── tl_2016_us_uac10.zip
+│       └── zip
+│           └── 2016
+│               └── US
+│                   └── tl_2016_us_zcta510.zip
+├── HERE
+│   ├── shapefiles
+│   │   └── 2016Q2
+│   │       └── US
+│   │           └── NHS_NPMRDS_Shapefile_HERE_2016Q2.zip
+│   └── static_files
+│       └── 2016Q2
+│           └── US
+│               └── FHWA_Monthly_Static_File_2016Q2.csv.zip
+└── INRIX
+    └── shapefiles
+        └── 201707
+            └── NY
+                └── NY.zip
+```
+
 

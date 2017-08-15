@@ -117,69 +117,78 @@ async function loadShapefiles () {
   }
 
   versions.forEach(async (ver) => {
-    try {
-      const versionDir = join(shapefilesDir, ver)
+    const versionDir = join(shapefilesDir, ver)
 
-      let filenames = (await readdirAsync(versionDir))
+    const states = await readdirAsync(versionDir)
 
-      const zipFiles = filenames.filter(fname => extname(fname) === '.zip')
+    states.forEach(async (state) => {
+      const stateDataDir = join(versionDir, state)
+      try {
 
-      if (zipFiles.length) {
-        if (zipFiles.length > 1) {
-          console.error(`INVARIANT BROKEN: more than one zip in HERE version directory: ${versionDir}`)
-          return
+        let filenames = (await readdirAsync(stateDataDir))
+
+        const zipFiles = filenames.filter(fname => extname(fname) === '.zip')
+
+        if (zipFiles.length) {
+          if (zipFiles.length > 1) {
+            console.error(
+              `INVARIANT BROKEN: more than one zip in HERE version directory: ${stateDataDir}`
+            )
+            return
+          }
+
+          console.log(`extracting ${zipFiles[0]}`)
+          await execAsync(`unzip -o ${join(stateDataDir, zipFiles[0])} -d ${stateDataDir}`)
         }
 
-        await execAsync(`unzip -o ${join(versionDir, zipFiles[0])} -d ${versionDir}`)
-      }
+        // After extracting the ZIP archive, read the dir again
+        filenames = (await readdirAsync(stateDataDir))
 
-      // After extracting the ZIP archive, read the dir again
-      filenames = (await readdirAsync(versionDir))
+        const dirs = {
+          [SHP]: join(stateDataDir, dtos[SHP].dir),
+          [LUT]: join(stateDataDir, dtos[LUT].dir),
+        }
 
-      const dirs = {
-        [SHP]: join(versionDir, dtos[SHP].dir),
-        [LUT]: join(versionDir, dtos[LUT].dir),
-      }
+        // Make the tmp subdirs
+        await Promise.all(Object.values(dirs).map(d => mkdirpAsync(d)))
 
-      // Make the tmp subdirs
-      await Promise.all(Object.values(dirs).map(d => mkdirpAsync(d)))
+        // Move all the datafiles into their respective tmp directories.
+        // This make using ogr2ogr easier.
+        await Promise.all(
+          filenames.map(async f => {
+            if ((await lstatAsync(join(stateDataDir, f))).isDirectory()) {
+              return
+            }
 
-      // Move all the datafiles into their respective tmp directories.
-      // This make using ogr2ogr easier.
-      await Promise.all(
-        filenames.map(async f => {
-          if ((await lstatAsync(join(versionDir, f))).isDirectory()) {
+            if (extname(f) === '.zip') {
+              return
+            }
+
+            let dataType = Object.keys(dtos).find(dt => f.match(dtos[dt].filePattern))
+
+            if (dataType) {
+              return renameAsync(join(stateDataDir, f), join(stateDataDir, dtos[dataType].dir, f))
+            }
+
             return
-          }
-
-          if (extname(f) === '.zip') {
-            return
-          }
-
-          let dataType = Object.keys(dtos).find(dt => f.match(dtos[dt].filePattern))
-
-          if (dataType) {
-            return renameAsync(join(versionDir, f), join(versionDir, dtos[dataType].dir, f))
-          }
-
-          return
-        })
-      )
+          })
+        )
       
-      const msg = `LOADED: HERE shapefiles data for version ${ver}`
-      console.time(msg)
+        const msg = `LOADED: HERE shapefiles data for version ${ver}`
+        console.time(msg)
 
-      await Promise.all([SHP, LUT].map(dataType => {
-        const dir = dirs[dataType]
-        return dtos[dataType].loader({ dataType, dir, ver })
-      }))
+        await Promise.all([SHP, LUT].map(dataType => {
+          const dir = dirs[dataType]
+          return dtos[dataType].loader({ state, dataType, dir, ver })
+        }))
 
-      console.timeEnd(msg)
+        console.timeEnd(msg)
 
-      await rimrafTmpFiles(Object.values(dirs))
-    } catch (err) {
-      console.error(err)
-    }
+        await rimrafTmpFiles(Object.values(dirs))
+      } catch (err) {
+        console.error(err)
+      }
+    })
   })
 }
 
@@ -205,54 +214,65 @@ async function loadStaticFile () {
   }
 
   versions.forEach(async (ver) => {
-    try {
-      const versionDir = join(staticFilesDir, ver)
+    const versionDir = join(staticFilesDir, ver)
 
-      let filenames = await readdirAsync(versionDir)
+    const states = await readdirAsync(versionDir)
 
-      const zipFiles = filenames.filter(fname => extname(fname) === '.zip')
+    states.forEach(async (state) => {
+      const stateDataDir = join(versionDir, state)
+      try {
 
+        let filenames = await readdirAsync(stateDataDir)
 
-      if (zipFiles.length) {
-        if (zipFiles.length > 1) {
-          console.error(`INVARIANT BROKEN: more than one zip in HERE version directory: ${versionDir}`)
+        const zipFiles = filenames.filter(fname => extname(fname) === '.zip')
+
+        if (zipFiles.length) {
+          if (zipFiles.length > 1) {
+            console.error(
+              `INVARIANT BROKEN: more than one zip in HERE version directory: ${stateDataDir}`
+            )
+            return
+          }
+
+          console.log(`extracting ${zipFiles[0]}`)
+          await execAsync(`unzip -o ${join(stateDataDir, zipFiles[0])} -d ${stateDataDir}`)
+        }
+
+        // After extracting the ZIP archive, read the dir again
+        filenames = (await readdirAsync(stateDataDir)).filter(fname => extname(fname) !== '.zip')
+
+        if (filenames.length === 0) {
+          console.error(`No datafile in ${stateDataDir}`)
+          return
+        } else if (filenames.length > 1) {
+          console.error(`INVARIANT BROKEN: more than one data file in: ${stateDataDir}`)
           return
         }
 
-        await execAsync(`unzip -o ${join(versionDir, zipFiles[0])} -d ${versionDir}`)
+        const staticFilePath = join(stateDataDir, filenames[0])
+        
+        const msg = `LOADED: HERE static_file data for version ${ver}`
+        console.time(msg)
+
+        await staticFileLoader({ state, staticFilePath, ver })
+
+        console.timeEnd(msg)
+
+        await rimrafTmpFiles(staticFilePath)
+      } catch (err) {
+        console.error(err)
       }
-
-      // After extracting the ZIP archive, read the dir again
-      filenames = (await readdirAsync(versionDir)).filter(fname => extname(fname) !== '.zip')
-
-      if (filenames.length === 0) {
-        console.error(`No datafile in ${versionDir}`)
-        return
-      } else if (filenames.length > 1) {
-        console.error(`INVARIANT BROKEN: more than one data file in: ${versionDir}`)
-        return
-      }
-
-      const staticFilePath = join(versionDir, filenames[0])
-      
-      const msg = `LOADED: HERE static_file data for version ${ver}`
-      console.time(msg)
-
-      await staticFileLoader({ staticFilePath, ver })
-
-      console.timeEnd(msg)
-
-      await rimrafTmpFiles(staticFilePath)
-    } catch (err) {
-      console.error(err)
-    }
+    })
   })
 }
 
 
-async function shpFileLoader ({ dataType, dir, ver }) {
+async function shpFileLoader ({ state, dataType, dir, ver }) {
+
+  const schema = state.toLowerCase()
+
   try {
-    await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS us;'`, { env: pgEnv })
+    await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS "${schema}";'`, { env: pgEnv })
   } catch (err) {
     // Race-condition error: IF NOT EXISTS is not thread-safe
     if (err.message.match(/ERROR:  duplicate key value violates unique constraint/)) {
@@ -262,26 +282,38 @@ async function shpFileLoader ({ dataType, dir, ver }) {
 
   const tableName = `${dtos[dataType].tableNameBase}_${ver.toLowerCase()}`
 
-  await execAsync(`psql -c 'DROP TABLE IF EXISTS us.${tableName};'`, { env: pgEnv })
+  await execAsync(`psql -c 'DROP TABLE IF EXISTS "${schema}".${tableName};'`, { env: pgEnv })
 
   const cmd =
-    `ogr2ogr -f PostgreSQL "${pgConnectStr}" ${dir} -lco SCHEMA=us ` +
+    `ogr2ogr -f PostgreSQL "${pgConnectStr}" ${dir} -lco SCHEMA="${schema}" ` +
     `-nln ${tableName} ${ (dataType === SHP) ? '-nlt MULTILINESTRING' : ''}`
 
   console.log(`loading ${dir.replace(/^.*HERE\//, '')} into PostgreSQL`)
   await execAsync(cmd)
 
-  await handleTableInheritanceHierarchy({ tableName, tableNameBase: dtos[dataType].tableNameBase })
+  await handleTableInheritanceHierarchy({
+    schema, tableName, tableNameBase: dtos[dataType].tableNameBase
+  })
 }
 
 
-async function staticFileLoader ({ staticFilePath, ver }) {
+async function staticFileLoader ({ state, staticFilePath, ver }) {
+
+  const schema = state.toLowerCase()
 
   const tableNameBase = dtos[STATIC].tableNameBase
   const tableName = `${tableNameBase}_${ver}`
 
-  await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS us;'`, { env: pgEnv })
-  await execAsync(`psql -c 'DROP TABLE IF EXISTS us.${tableName};'`, { env: pgEnv })
+  try {
+    await execAsync(`psql -c 'CREATE SCHEMA IF NOT EXISTS "${schema}";'`, { env: pgEnv })
+  } catch (err) {
+    // Race-condition error: IF NOT EXISTS is not thread-safe
+    if (err.message.match(/ERROR:  duplicate key value violates unique constraint/)) {
+      throw err
+    }
+  }
+
+  await execAsync(`psql -c 'DROP TABLE IF EXISTS "${schema}".${tableName};'`, { env: pgEnv })
 
   const cmd = `
     ${pgfutterPath} \
@@ -289,7 +321,7 @@ async function staticFileLoader ({ staticFilePath, ver }) {
       --table ${tableName} \
       --host ${pgEnv.PGHOST} \
       --port ${pgEnv.PGPORT} \
-      --schema us \
+      --schema "${schema}" \
       --username ${pgEnv.PGUSER} \
       --pass ${pgEnv.PGPASSWORD} \
       csv '${staticFilePath}'
@@ -303,33 +335,35 @@ async function staticFileLoader ({ staticFilePath, ver }) {
     return
   }
 
-  await handleTableInheritanceHierarchy({ tableName, tableNameBase })
+  await handleTableInheritanceHierarchy({
+    schema, tableName, tableNameBase
+  })
 }
 
 
-async function handleTableInheritanceHierarchy ({ tableName, tableNameBase }) {
-  // Create the state's parent table
+async function handleTableInheritanceHierarchy ({ schema, tableName, tableNameBase }) {
+  // Create the schema's parent table
   await execAsync(
-    `psql -c 'CREATE TABLE IF NOT EXISTS us.${tableNameBase} (LIKE us.${tableName});'`,
+    `psql -c 'CREATE TABLE IF NOT EXISTS "${schema}".${tableNameBase} (LIKE "${schema}".${tableName});'`,
     { env: pgEnv }
   )
 
   // Create the root table
   await execAsync(
-    `psql -c 'CREATE TABLE IF NOT EXISTS public.${tableNameBase} (LIKE us.${tableNameBase});'`,
+    `psql -c 'CREATE TABLE IF NOT EXISTS public.${tableNameBase} (LIKE "${schema}".${tableNameBase});'`,
     { env: pgEnv }
   )
 
   // State's subset inherits from parent.
   await execAsync(
-    `psql -c 'ALTER TABLE us.${tableName} INHERIT us.${tableNameBase};'`,
+    `psql -c 'ALTER TABLE "${schema}".${tableName} INHERIT "${schema}".${tableNameBase};'`,
     { env: pgEnv }
   )
 
   // State's parent inherits from root.
   try {
     await execAsync(
-      `psql -c 'ALTER TABLE us.${tableNameBase} INHERIT public.${tableNameBase};'`,
+      `psql -c 'ALTER TABLE "${schema}".${tableNameBase} INHERIT public.${tableNameBase};'`,
       { env: pgEnv }
     )
   } catch (err) {
