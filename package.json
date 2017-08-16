@@ -1,15 +1,14 @@
 {
-  "name": "testrun",
-  "version": "1.0.0",
+  "name": "pg-data-loader",
+  "version": "0.1.0",
   "description": "",
-  "main": "load-Census.js",
+  "main": "",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "ISC",
+  "author": "Paul Tomchik",
+  "license": "MIT",
   "dependencies": {
-    "eslint": "^4.4.1",
     "extract-zip": "^1.6.5",
     "node-env-file": "^0.1.8"
   }

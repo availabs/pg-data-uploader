@@ -48,7 +48,7 @@ const minimistOptions = {
 	alias: { //
 		agencies: 'agency',
 		dataSourceFormat: 'dataSourceFormats',
-		geographyType: 'geographyTypes',
+		domain: 'domains',
 		versions: 'version',
 		states: 'state',
 	}
@@ -59,7 +59,7 @@ let {
   dataDir = join(__dirname, '../data/'),
 	agencies: reqAgencies,
 	dataSourceFormats: reqDataSourceFormats,
-	geographyTypes: reqGeographyTypes,
+	domains: reqDomains,
   versions: reqVersions,
 	states: reqStates,
 	cleanup,
@@ -85,7 +85,7 @@ const shapeFileLoader =
 // Convert the requested fields to arrays.
 reqAgencies = reqAgencies && reqAgencies.split(',').map(s => s && s.trim()).filter(s => s)
 reqDataSourceFormats = reqDataSourceFormats && reqDataSourceFormats.split(',').map(s => s && s.trim()).filter(s => s)
-reqGeographyTypes = reqGeographyTypes && reqGeographyTypes.split(',').map(s => s && s.trim()).filter(s => s)
+reqDomains = reqDomains && reqDomains.split(',').map(s => s && s.trim()).filter(s => s)
 reqStates = reqStates && reqStates.split(',').map(s => s && s.trim()).filter(s => s)
 reqVersions = reqVersions && reqVersions.split(',').map(s => s && s.trim()).filter(s => s)
 
@@ -127,15 +127,15 @@ async function loadData () {
       const dataSourceFormat = dataSourceFormats[j]
       const dataSourceFormatDir = join(agencyDir, dataSourceFormat)
 
-      const geographyTypes = (reqGeographyTypes)
-          ? (await readdirAsync(dataSourceFormatDir)).filter(f => reqGeographyTypes.includes(f))
+      const domains = (reqDomains)
+          ? (await readdirAsync(dataSourceFormatDir)).filter(f => reqDomains.includes(f))
           : await readdirAsync(dataSourceFormatDir)
 
-      // Load the geographyTypes in parallel
+      // Load the domains in parallel
       await Promise.all(
-        geographyTypes.map((geographyType) => (async () => {
+        domains.map((domain) => (async () => {
           try {
-            const geographyTypeDir = join(dataSourceFormatDir, geographyType)
+            const geographyTypeDir = join(dataSourceFormatDir, domain)
 
             const versions = (reqVersions)
                 ? (await readdirAsync(geographyTypeDir)).filter(f => reqVersions.includes(f))
@@ -183,7 +183,7 @@ async function loadData () {
                 }
 
                 const schema = state.toLowerCase()
-                const parentTableName = (dataSourceFormat === SHP) ? `${geographyType}_shp` : geographyType
+                const parentTableName = (dataSourceFormat === SHP) ? `${domain}_shp` : domain
                 const tableName = `${parentTableName}_v${version}`
 
                 try {
