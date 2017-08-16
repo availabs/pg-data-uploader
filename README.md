@@ -64,6 +64,10 @@ The shapes were taken from the FHWA Shapefiles.
 
   * Used to get the abbreviations
 
+## etc
+
+* [State Abbreviations](https://statetable.com/)
+
 ## `data/` directory structure
 
 ### The `bin/load-*` scripts assume the following directory structure
