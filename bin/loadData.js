@@ -175,9 +175,6 @@ async function loadData () {
                 }
 
                 if (((dataSourceFormat === CSV) || (dataSourceFormat === TSV)) && (datafiles.length > 1)) {
-                  console.log('\n=================\n')
-                  console.log(datafiles)
-                  console.log('\n=================\n')
                   console.error(`INVARIANT BROKEN: more than one datafile ${dir}`)
                   return
                 }

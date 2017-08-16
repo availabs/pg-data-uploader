@@ -1,6 +1,4 @@
 node_modules/
 config/*
-data/*
-data/**/*
-!data/*/
-!data/**/
+data/
+nysdot/
