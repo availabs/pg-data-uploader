@@ -39,8 +39,6 @@ const unlinkAsync = promisify(unlink)
 const extractAsync = promisify(extract)
 const execAsync = promisify(exec)
 
-
-
 const cliArgs = process.argv.slice(2)
 const minimistOptions = {
 	//treat all double hyphenated arguments without equal signs as boolean
@@ -176,7 +174,10 @@ async function loadData () {
                   return
                 }
 
-                if ((dataSourceFormat === CSV) || (dataSourceFormat === TSV) && (datafiles.length > 1)) {
+                if (((dataSourceFormat === CSV) || (dataSourceFormat === TSV)) && (datafiles.length > 1)) {
+                  console.log('\n=================\n')
+                  console.log(datafiles)
+                  console.log('\n=================\n')
                   console.error(`INVARIANT BROKEN: more than one datafile ${dir}`)
                   return
                 }
